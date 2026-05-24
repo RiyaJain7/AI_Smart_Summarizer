@@ -1,6 +1,7 @@
 import streamlit as st
 import nltk
 
+# Download tokenizer data
 nltk.download('punkt_tab')
 nltk.download('punkt')
 
@@ -8,90 +9,158 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lsa import LsaSummarizer
 
+# ---------------- PAGE CONFIG ----------------
+
 st.set_page_config(
     page_title="AI Study Assistant Pro",
     page_icon="🧠",
     layout="centered"
 )
 
+# ---------------- HEADER ----------------
+
 st.title("🧠 AI Study Assistant Pro")
 
-st.write(
-    "Transform long articles into summaries, notes, and mind maps instantly."
+st.markdown("""
+### 📚 Transform Articles into:
+- 📌 Smart Summaries
+- 📝 Quick Notes
+- 🧠 Keyword Mind Maps
+- 🌐 English & Hindi Support
+""")
+
+# ---------------- LANGUAGE SELECTOR ----------------
+
+language = st.selectbox(
+    "🌐 Select Language",
+    ["English", "Hindi"]
 )
 
+# ---------------- TEXT INPUT ----------------
+
 article = st.text_area(
-    "📄 Paste your article here:",
+    "📄 Paste your article or notes here:",
     height=300
 )
 
-def generate_summary(text):
+# ---------------- SUMMARY FUNCTION ----------------
 
-    parser = PlaintextParser.from_string(
-        text,
-        Tokenizer("english")
-    )
+def generate_summary(text, language):
 
-    summarizer = LsaSummarizer()
+    # ENGLISH SUMMARY
 
-    summary = summarizer(
-        parser.document,
-        3
-    )
+    if language == "English":
 
-    final_summary = ""
+        parser = PlaintextParser.from_string(
+            text,
+            Tokenizer("english")
+        )
 
-    for sentence in summary:
-        final_summary += str(sentence) + " "
+        summarizer = LsaSummarizer()
 
-    return final_summary
+        summary = summarizer(
+            parser.document,
+            3
+        )
 
-if st.button("🚀 Generate AI Study Notes"):
+        final_summary = ""
 
-    if article.strip() == "":
-        st.warning("Please enter article text.")
+        for sentence in summary:
+
+            final_summary += str(sentence) + " "
+
+        return final_summary
+
+    # HINDI SUMMARY
 
     else:
 
-        final_summary = generate_summary(article)
+        sentences = text.split("।")
 
-        original_words = len(article.split())
-        summary_words = len(final_summary.split())
+        short_summary = "। ".join(sentences[:3])
+
+        return short_summary
+
+# ---------------- BUTTON ----------------
+
+if st.button("🚀 Generate Smart Notes"):
+
+    # EMPTY INPUT CHECK
+
+    if article.strip() == "":
+
+        st.warning("⚠️ Please paste some text first.")
+
+    else:
+
+        # GENERATE SUMMARY
+
+        final_summary = generate_summary(
+            article,
+            language
+        )
+
+        # ---------------- SUMMARY ----------------
 
         st.subheader("📌 Smart Summary")
 
         st.success(final_summary)
 
-        st.subheader("📝 Key Notes")
+        # ---------------- NOTES ----------------
 
-        notes = final_summary.split(". ")
+        st.subheader("📝 Quick Notes")
 
-        for idx, note in enumerate(notes):
+        if language == "English":
+
+            notes = final_summary.split(".")
+
+        else:
+
+            notes = final_summary.split("।")
+
+        for note in notes:
 
             if note.strip() != "":
+
                 st.write(f"✅ {note}")
 
-        st.subheader("🧠 Mind Map Points")
+        # ---------------- MIND MAP ----------------
 
-        for idx, note in enumerate(notes):
+        st.subheader("🧠 Keyword Mind Map")
 
-            if note.strip() != "":
-                st.markdown(f"""
-- 📍 {note}
-""")
+        words = article.split()
 
-        st.subheader("📊 Statistics")
+        important_words = []
 
-        st.write(f"Original Words: {original_words}")
-        st.write(f"Summary Words: {summary_words}")
+        for word in words:
 
-        reduction = round(
-            ((original_words - summary_words)
-            / original_words) * 100,
-            2
+            clean_word = word.lower()
+
+            if len(clean_word) > 5:
+
+                important_words.append(clean_word)
+
+        unique_words = list(set(important_words))
+
+        for word in unique_words[:10]:
+
+            st.write(f"🔹 {word}")
+
+        # ---------------- ANALYTICS ----------------
+
+        st.subheader("📊 Article Analytics")
+
+        total_words = len(article.split())
+
+        reading_time = round(total_words / 200, 2)
+
+        st.write(f"📄 Total Words: {total_words}")
+
+        st.write(
+            f"⏱ Estimated Reading Time: {reading_time} mins"
         )
 
-        st.write(f"Content Reduction: {reduction}%")
+        # ---------------- DOWNLOAD BUTTON ----------------
 
         st.download_button(
             label="📥 Download Notes",
@@ -99,3 +168,9 @@ if st.button("🚀 Generate AI Study Notes"):
             file_name="study_notes.txt",
             mime="text/plain"
         )
+
+# ---------------- FOOTER ----------------
+
+st.markdown("---")
+
+st.caption("✨ Developed using Streamlit + NLP")
