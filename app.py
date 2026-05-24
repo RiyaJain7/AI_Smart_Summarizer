@@ -1,4 +1,9 @@
 import streamlit as st
+import nltk
+
+nltk.download('punkt_tab')
+nltk.download('punkt')
+
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lsa import LsaSummarizer
